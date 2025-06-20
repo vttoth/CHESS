@@ -708,6 +708,7 @@ function doMove(errMoves = [])
         userTurn = (userTurn === 'w') ? 'b' : 'w';
         document.getElementById('board').innerHTML = fenToSvg(fen);
         document.getElementById("FEN").innerText = fen;
+        document.getElementById("errmsg").innerText = "";
         unPause();
       }
       catch (e)
@@ -715,7 +716,11 @@ function doMove(errMoves = [])
         console.log("Bad move:", e.message);
         errMoves.push(move);
         if (errMoves.length < 3) setTimeout(doMove(errMoves));
-        else unPause();
+        else
+        {
+          document.getElementById("errmsg").innerText = "";
+          unPause();
+        }
       }
     }
   }
@@ -727,7 +732,6 @@ function doMove(errMoves = [])
   {
     console.log(`An error has occurred: ${err}`);
     document.getElementById("errmsg").innerText = `An error has occurred: ${err}`;
-    return;
     unPause();
   }
 }
