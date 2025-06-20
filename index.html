@@ -1,0 +1,52 @@
+<html>
+<head>
+<title>Playing chess with GPT4.1-o3</title>
+</head>
+<body>
+
+<h1>Playing chess with GPT4.1-o3</h1>
+
+<p>GPT is not a great chess player but a capable one. What it cannot
+ do is to keep track of the board across dozens of moves. Then again,
+ humans cannot do that either.</p>
+<p>Here, the board is taken care of by software (incidentally, written
+ with significant help from GPT). The board is represented using FEN
+ (Forsyth-Edwards Notation) which GPT understands. In each turn, the
+ language model is called anew, with the current state of the board
+ and the most recent moves.</p>
+<p>It is your turn, if you wish to play White. Otherwise, click
+ [Next move] and it's GPT's turn. You can always click [Next move]
+ in the middle of a game to switch sides (so you can even force GPT
+ to play against itself.</p>
+
+<script type='text/javascript' src='scripts/chess.js?v=1'></script>
+
+<p>The current FEN string: <span style='font-family: monospace' id='FEN'>&nbsp;</span></p>
+
+<table style='border:0;'>
+<tr style='border: 0'>
+<td style='border: 0;'><span style='color: red; font-weight: bold;' id='errmsg'></span></td>
+<td style='border: 0; padding-left: 50px; padding-bottom: 0.5em;'>
+<button id="moveBtn" onclick="doMove()">Next move</button>&nbsp;<button id="resetBtn" onclick="resetBoard()">Reset</button>
+</td>
+<td style='border: 0'>&nbsp;</td>
+</tr>
+
+<tr style='border: 0'>
+<td style='border: 0; vertical-align: top; padding-top: 2em'><div id='board'>&nbsp;</div></td>
+<td style='border: 0; vertical-align: top; padding-left: 50px; padding-right: 50px; min-width: 160px;'>
+<h2>Moves so far</h2>
+<pre id='moves'>
+</pre>
+</td>
+<td style='border: 0; vertical-align: top; 50px; border-left: 1px solid #CCC;'>
+<div style='padding-left: 10px;'>
+<h2 style='color: #666'>Commentary</h2>
+<div style='font-size: 9pt; color: #666; max-height: 600px; overflow-y: auto;' id='commentary'>
+</div>
+</div>
+</td>
+</tr></table>
+
+</body>
+</html>
