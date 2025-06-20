@@ -1,52 +1,226 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-<title>Playing chess with GPT4.1-o3</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Playing chess with GPT4.1-o3</title>
+  <style>
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+        
+body {
+  position: relative;
+  padding: 15px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+        
+/* Background image styling */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  background-image: url('images/chess-player.png');
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  opacity: 0.15; /* Adjust transparency level */
+  filter: sepia(80%); /* Additional sepia effect if needed */
+}
+        
+#board {
+  max-width: 400px;
+  width: 100%;
+  height: auto;
+}
+        
+#board svg {
+  width: 100%;
+  height: auto;
+  max-width: 400px;
+  max-height: 400px;
+}
+        
+.game-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+        
+.board-section {
+  flex: 1 1 400px;
+}
+        
+.moves-section {
+  flex: 1 1 160px;
+  min-width: 160px;
+}
+        
+.commentary-section {
+  flex: 1 1 300px;
+  border-left: 1px solid #CCC;
+  padding-left: 10px;
+}
+        
+@media (max-width: 768px) {
+  .game-container {
+    flex-direction: column;
+  }
+            
+  .commentary-section {
+    border-left: none;
+    border-top: 1px solid #CCC;
+    padding-left: 0;
+    padding-top: 10px;
+    margin-top: 20px;
+  }
+            
+  #board {
+    margin: 0 auto;
+  }
+}
+        
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+        
+button {
+  padding: 8px 12px;
+  cursor: pointer;
+}
+        
+#errmsg {
+  color: red;
+  font-weight: bold;
+  margin-right: 15px;
+}
+        
+#commentary {
+  font-size: 9pt;
+  color: #666;
+  max-height: 600px;
+  overflow-y: auto;
+}
+        
+pre#moves {
+  overflow-x: auto;
+  white-space: pre-wrap;
+}
+        
+.fen-display {
+  margin-bottom: 15px;
+  overflow-x: auto;
+}
+  </style>
 </head>
 <body>
+  <h1>Playing chess with GPT4.1-o3</h1>
 
-<h1>Playing chess with GPT4.1-o3</h1>
+  <p>GPT is not a great chess player but a capable one. What it cannot
+   do is to keep track of the board across dozens of moves. Then again,
+   humans cannot do that either.</p>
+  <p>Here, the board is taken care of by software (incidentally, written
+   with significant help from GPT). The board is represented using FEN
+   (Forsyth-Edwards Notation) which GPT understands. In each turn, the
+   language model is called anew, with the current state of the board
+   and the most recent moves.</p>
+  <p>It is your turn, if you wish to play White. Otherwise, click
+   [Next move] and it's GPT's turn. You can always click [Next move]
+   in the middle of a game to switch sides (so you can even force GPT
+   to play against itself.</p>
 
-<p>GPT is not a great chess player but a capable one. What it cannot
- do is to keep track of the board across dozens of moves. Then again,
- humans cannot do that either.</p>
-<p>Here, the board is taken care of by software (incidentally, written
- with significant help from GPT). The board is represented using FEN
- (Forsyth-Edwards Notation) which GPT understands. In each turn, the
- language model is called anew, with the current state of the board
- and the most recent moves.</p>
-<p>It is your turn, if you wish to play White. Otherwise, click
- [Next move] and it's GPT's turn. You can always click [Next move]
- in the middle of a game to switch sides (so you can even force GPT
- to play against itself.</p>
+  <script type='text/javascript' src='scripts/chess.js?v=1'></script>
+    <script>
+        // Function to adjust SVG viewBox when it's created or updated
+        function adjustChessBoardSVG() {
+            const boardDiv = document.getElementById('board');
+            const svg = boardDiv.querySelector('svg');
+            
+            if (svg) {
+                // Remove any fixed width/height attributes
+                svg.removeAttribute('width');
+                svg.removeAttribute('height');
+                
+                // Make sure the SVG has a viewBox
+                if (!svg.getAttribute('viewBox')) {
+                    // If no viewBox exists, create one based on original dimensions
+                    const width = svg.getAttribute('width') || 400;
+                    const height = svg.getAttribute('height') || 400;
+                    svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+                }
+                
+                // Set responsive dimensions
+                svg.style.width = '100%';
+                svg.style.height = 'auto';
+                svg.style.maxWidth = '400px';
+            }
+        }
+        
+        // Run when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initial adjustment
+            adjustChessBoardSVG();
+            
+            // Set up a MutationObserver to watch for changes to the board div
+            const boardObserver = new MutationObserver(function(mutations) {
+                adjustChessBoardSVG();
+            });
+            
+            // Start observing the board div for changes
+            boardObserver.observe(document.getElementById('board'), {
+                childList: true,
+                subtree: true
+            });
+            
+            // Also adjust after any board reset or move
+            const moveBtn = document.getElementById('moveBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            
+            if (moveBtn) moveBtn.addEventListener('click', function() {
+                setTimeout(adjustChessBoardSVG, 100); // Slight delay to ensure DOM updates
+            });
+            
+            if (resetBtn) resetBtn.addEventListener('click', function() {
+                setTimeout(adjustChessBoardSVG, 100);
+            });
+        });
+    </script>
 
-<script type='text/javascript' src='scripts/chess.js?v=1'></script>
+  <div class="fen-display">
+    <p>The current FEN string: <span style='font-family: monospace' id='FEN'>&nbsp;</span></p>
+  </div>
 
-<p>The current FEN string: <span style='font-family: monospace' id='FEN'>&nbsp;</span></p>
+  <div class="controls">
+    <span id='errmsg'></span>
+    <button id="moveBtn" onclick="doMove()">Next move</button>
+    <button id="resetBtn" onclick="resetBoard()">Reset</button>
+  </div>
 
-<table style='border:0;'>
-<tr style='border: 0'>
-<td style='border: 0;'><span style='color: red; font-weight: bold;' id='errmsg'></span></td>
-<td style='border: 0; padding-left: 50px; padding-bottom: 0.5em;'>
-<button id="moveBtn" onclick="doMove()">Next move</button>&nbsp;<button id="resetBtn" onclick="resetBoard()">Reset</button>
-</td>
-<td style='border: 0'>&nbsp;</td>
-</tr>
-
-<tr style='border: 0'>
-<td style='border: 0; vertical-align: top; padding-top: 2em'><div id='board'>&nbsp;</div></td>
-<td style='border: 0; vertical-align: top; padding-left: 50px; padding-right: 50px; min-width: 160px;'>
-<h2>Moves so far</h2>
-<pre id='moves'>
-</pre>
-</td>
-<td style='border: 0; vertical-align: top; 50px; border-left: 1px solid #CCC;'>
-<div style='padding-left: 10px;'>
-<h2 style='color: #666'>Commentary</h2>
-<div style='font-size: 9pt; color: #666; max-height: 600px; overflow-y: auto;' id='commentary'>
-</div>
-</div>
-</td>
-</tr></table>
-
+  <div class="game-container">
+    <div class="board-section">
+      <div id='board'>&nbsp;</div>
+    </div>
+            
+    <div class="moves-section">
+      <h2>Moves so far</h2>
+      <pre id='moves'></pre>
+    </div>
+            
+    <div class="commentary-section">
+      <h2 style='color: #666'>Commentary</h2>
+      <div id='commentary'></div>
+    </div>
+  </div>
 </body>
 </html>
