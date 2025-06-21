@@ -626,6 +626,7 @@ function resetBoard()
   document.getElementById("moves").innerText = mvs;
   counter = 0;
   white = true;
+  userTurn = 'w';
 }
 
 window.addEventListener('load', resetBoard);
