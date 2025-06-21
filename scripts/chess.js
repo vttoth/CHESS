@@ -98,6 +98,7 @@ function handleClick(square)
     return;
   }
 
+  let checkMate = false;
   try
   {
     const [fromX, fromY] = getBoardSquare(from);
@@ -149,6 +150,8 @@ function handleClick(square)
     document.getElementById("moves").innerHTML = mvs.replaceAll("\n", "<br/>");
 
     userTurn = (userTurn === 'w') ? 'b' : 'w';
+
+    if (move.slice(-1) === "#") checkMate = true;
   }
   catch (e)
   {
@@ -160,10 +163,8 @@ function handleClick(square)
   document.getElementById('board').innerHTML = fenToSvg(fen);
   document.getElementById("FEN").innerText = fen;
 
-  setTimeout(doMove);
+  if (!checkMate) setTimeout(doMove);
 }
-
-// document.getElementById('commentary').scrollTop = document.getElementById('commentary').scrollHeight;
 
 function getBoardSquare(squareStr)
 {
@@ -682,7 +683,7 @@ function doMove(errMoves = [])
       const txt = outputs[outputs.length - 1].content[0].text;
       const move = txt.split("\n").pop();
       const span = document.createElement("span");
-      span.innerText += "\n" + txt + "\n";
+      span.innerText += txt + "\n";
       document.getElementById('commentary').innerHTML += `<h4>Move ${(counter+1)}</h4>`;
       document.getElementById('commentary').appendChild(span);
       document.getElementById('commentary').innerHTML += "<hr/>";
@@ -690,20 +691,23 @@ function doMove(errMoves = [])
      
       try
       { 
-        const res = updateFEN(fen, move);
-
-        fen = res.fen;
-
-        if (userTurn === 'w')
+        if (move !== "resign")
         {
-          mvs += "" + (counter+1) + ". " + res.san;
+          const res = updateFEN(fen, move);
+
+          fen = res.fen;
+
+          if (userTurn === 'w')
+          {
+            mvs += "" + (counter+1) + ". " + res.san;
+          }
+          else
+          {
+            mvs += " " + res.san + "\n";
+            counter++;
+          }
+          document.getElementById("moves").innerHTML = mvs.replaceAll("\n", "<br/>");
         }
-        else
-        {
-          mvs += " " + res.san + "\n";
-          counter++;
-        }
-        document.getElementById("moves").innerHTML = mvs.replaceAll("\n", "<br/>");
 
         userTurn = (userTurn === 'w') ? 'b' : 'w';
         document.getElementById('board').innerHTML = fenToSvg(fen);
