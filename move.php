@@ -25,13 +25,13 @@ else
 $query .= "Please analyze the board and respond with your move. ";
 if ($err && count($err) > 0)
 {
-  $query .= ($err == 1) ? "The move " : "The moves ";
+  $query .= (count($err) == 1) ? "The move " : "The moves ";
   for ($i = 0; $i < count($err); $i++)
   {
     if ($i > 0) $query .= ", ";
     $query .= $err[$i];
   }
-  $query .= (($err == 1) ? " is" : " are") . " not legal. ";
+  $query .= ((count($err) == 1) ? " is" : " are") . " not legal. ";
 }
 $query .= "Conclude your answer with your move on the last line, presented in long algebraic notation, e.g.,\n\na1-a2\n";
 
