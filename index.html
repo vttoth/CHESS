@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Playing chess with GPT4.1-o3</title>
+  <title>Playing chess with GPT</title>
   <style>
 html, body {
   margin: 0;
@@ -17,6 +17,8 @@ body {
   padding: 15px;
   max-width: 1200px;
   margin: 0 auto;
+  padding-bottom: 0;
+  margin-top: -1em;
 }
         
 /* Background image styling */
@@ -125,7 +127,7 @@ pre#moves {
   </style>
 </head>
 <body>
-  <h1>Playing chess with GPT4.1-o3</h1>
+  <h1>Playing chess with GPT</h1>
 
   <p>GPT is not a great chess player but a capable one. What it cannot
    do is to keep track of the board across dozens of moves. Then again,
@@ -205,6 +207,8 @@ pre#moves {
     <span id='errmsg'></span>
     <button id="moveBtn" onclick="doMove()">Next move</button>
     <button id="resetBtn" onclick="resetBoard()">Reset</button>
+    <button id="loadBtn" onclick="loadAll()">Load</button>
+    <button id="saveBtn" onclick="saveAll()">Save</button>
   </div>
 
   <div class="game-container">

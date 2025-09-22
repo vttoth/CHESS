@@ -16,6 +16,61 @@
 let selectedSquare = null;
 let userTurn = 'w'; // starts with white
 
+function saveAll()
+{
+  let data =
+  {
+    'mvs': mvs,
+    'fen': fen,
+    'counter': counter,
+    'userTurn': userTurn,
+    'commentary': document.getElementById("commentary").innerHTML
+  };
+
+  let blob = new Blob([JSON.stringify(data)], {type: "application/json"});
+  let url = URL.createObjectURL(blob);
+  let a = document.createElement("a");
+  a.href = url;
+  a.download = document.title + ".json";
+  a.click();
+  window.removeEventListener("beforeunload", onBeforeUnload);
+}
+
+function loadAll()
+{
+  let fileInput = document.createElement("input");
+  fileInput.type = "file";
+  fileInput.accept = ".json, application/json";
+  fileInput.addEventListener("change", () =>
+  {
+    let file = fileInput.files[0];
+    fileName = file.name.replace(/.json$/,"");
+    let reader = new FileReader();
+    reader.addEventListener("load", () =>
+    {
+      let data = JSON.parse(reader.result);
+      mvs = data.mvs;
+      fen = data.fen;
+      counter = data.counter;
+
+      document.getElementById("FEN").innerText = fen;
+      document.getElementById('board').innerHTML=fenToSvg(fen);
+      document.getElementById("moves").innerText = mvs;
+      document.getElementById("commentary").innerHTML =  data.commentary;
+
+      fileInput.remove();
+    });
+    reader.readAsText(file);
+  });
+  fileInput.click();
+}
+
+function onBeforeUnload(event)
+{
+  event.preventDefault();
+  return true;
+}
+
 function fenToSvg(fen)
 {
   const pieceCodes =
@@ -122,6 +177,8 @@ function handleClick(square)
     const color = piece === piece.toUpperCase() ? 'w' : 'b';
     if (color !== userTurn) throw new Error("It's not your turn.");
 
+    window.removeEventListener("beforeunload", onBeforeUnload);
+    window.addEventListener("beforeunload", onBeforeUnload);
 
     // ─── Pawn‐promotion UI ─────────────────────────────────────────
     let promotionSuffix = '';
@@ -653,6 +710,8 @@ function doPause()
   document.body.style.cursor = 'wait';
   document.getElementById("moveBtn").disabled = true;
   document.getElementById("resetBtn").disabled = true;
+  document.getElementById("loadBtn").disabled = true;
+  document.getElementById("saveBtn").disabled = true;
   document.getElementById('board').disabled = true;
 }
 
@@ -661,6 +720,8 @@ function unPause()
   document.body.style.cursor = '';
   document.getElementById("moveBtn").disabled = false;
   document.getElementById("resetBtn").disabled = false;
+  document.getElementById("loadBtn").disabled = false;
+  document.getElementById("saveBtn").disabled = false;
   document.getElementById('board').disabled = false;
 }
 
@@ -730,6 +791,9 @@ function doMove(errMoves = [])
         document.getElementById("FEN").innerText = fen;
         document.getElementById("errmsg").innerText = "";
         unPause();
+
+        window.removeEventListener("beforeunload", onBeforeUnload);
+        window.addEventListener("beforeunload", onBeforeUnload);
       }
       catch (e)
       {
