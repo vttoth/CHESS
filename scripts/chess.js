@@ -45,6 +45,8 @@ function loadAll()
   {
     let file = fileInput.files[0];
     fileName = file.name.replace(/.json$/,"");
+    document.title = fileName;
+    document.getElementById("title").innerText = fileName;
     let reader = new FileReader();
     reader.addEventListener("load", () =>
     {
