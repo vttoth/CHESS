@@ -15,6 +15,17 @@
 
 let selectedSquare = null;
 let userTurn = 'w'; // starts with white
+let undoBuffer = [];
+
+function removeAfter(e, removeThis = false)
+{
+  const parent = e.parentElement;
+  let next;
+
+  while ((next = e.nextSibling)) parent.removeChild(next);
+  if (removeThis) parent.removeChild(e);
+}
+
 
 function saveAll()
 {
@@ -24,6 +35,7 @@ function saveAll()
     'fen': fen,
     'counter': counter,
     'userTurn': userTurn,
+    'undoBuffer': undoBuffer,
     'commentary': document.getElementById("commentary").innerHTML
   };
 
@@ -54,6 +66,9 @@ function loadAll()
       mvs = data.mvs;
       fen = data.fen;
       counter = data.counter;
+      if (data.undoBuffer) undoBuffer = data.undoBuffer;
+      else undoBuffer = [];
+      document.getElementById("undoBtn").disabled = !undoBuffer.length;
 
       document.getElementById("FEN").innerText = fen;
       document.getElementById('board').innerHTML=fenToSvg(fen);
@@ -65,6 +80,30 @@ function loadAll()
     reader.readAsText(file);
   });
   fileInput.click();
+}
+
+function doUndo()
+{
+  const move = undoBuffer.pop();
+
+  document.getElementById("undoBtn").disabled = !undoBuffer.length;
+
+  if (move)
+  {
+    fen = move.fen;
+    mvs = move.mvs;
+    counter = move.counter;
+    userTurn = move.userTurn;
+
+    document.getElementById("FEN").innerText = fen;
+    document.getElementById('board').innerHTML=fenToSvg(fen);
+    document.getElementById("moves").innerText = mvs;  
+
+    if (move.cID)
+    {
+      removeAfter(document.getElementById(cID), true);
+    }
+  }
 }
 
 function onBeforeUnload(event)
@@ -206,6 +245,9 @@ function handleClick(square)
       }
     }
     // ──────────────────────────────────────────────────────────────
+
+    undoBuffer.push({'fen': fen, 'mvs': mvs, 'counter': counter, 'userTurn': userTurn });
+    document.getElementById("undoBtn").disabled = !undoBuffer.length;
 
     // include promotionSuffix if any
     const move = `${from}-${to}${promotionSuffix}`;
@@ -692,6 +734,7 @@ function rs()
 
 let counter = 0;
 let white = true;
+let cID = 100000;  // Commentary ID, for undo reference
 
 function resetBoard()
 {
@@ -712,6 +755,7 @@ function doPause()
   document.body.style.cursor = 'wait';
   document.getElementById("moveBtn").disabled = true;
   document.getElementById("resetBtn").disabled = true;
+  document.getElementById("undoBtn").disabled = true;
   document.getElementById("loadBtn").disabled = true;
   document.getElementById("saveBtn").disabled = true;
   document.getElementById('board').disabled = true;
@@ -722,6 +766,7 @@ function unPause()
   document.body.style.cursor = '';
   document.getElementById("moveBtn").disabled = false;
   document.getElementById("resetBtn").disabled = false;
+  document.getElementById("undoBtn").disabled = !undoBuffer.length;
   document.getElementById("loadBtn").disabled = false;
   document.getElementById("saveBtn").disabled = false;
   document.getElementById('board').disabled = false;
@@ -763,15 +808,21 @@ function doMove(errMoves = [])
       const move = txt.split("\n").pop();
       const span = document.createElement("span");
       span.innerText += txt + "\n";
-      document.getElementById('commentary').innerHTML += `<h4>Move ${(counter+1)}</h4>`;
-      document.getElementById('commentary').appendChild(span);
-      document.getElementById('commentary').innerHTML += "<hr/>";
+      const div = document.createElement("div");
+      div.setAttribute("id", ++cID);
+      div.innerHTML += `<h4>Move ${(counter+1)}</h4>`;
+      div.appendChild(span);
+      div.innerHTML += "<hr/>";
+      document.getElementById('commentary').appendChild(div);
       document.getElementById('commentary').scrollTop = document.getElementById('commentary').scrollHeight;
-     
+
       try
       { 
         if (move !== "resign")
         {
+          undoBuffer.push({'fen': fen, 'mvs': mvs, 'counter': counter, 'userTurn': userTurn, 'cID': cID });
+          document.getElementById("undoBtn").disabled = !undoBuffer.length;
+
           const res = updateFEN(fen, move);
 
           fen = res.fen;
